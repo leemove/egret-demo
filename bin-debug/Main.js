@@ -181,6 +181,10 @@ var Main = (function (_super) {
                 boxBody.rolling = true;
             }
             addOneBox(e);
+            setTimeout(function () {
+                self.currentFruit = self.createFruit(self.stage.width / 24);
+                self.stage.addChild(self.currentFruit);
+            }, 300);
         }, this);
     };
     Main.prototype.createFruit = function (factor) {
@@ -238,6 +242,7 @@ var Main = (function (_super) {
         //创建world
         var world = new p2.World();
         world.sleepMode = p2.World.BODY_SLEEPING;
+        world.gravity = [0, -50];
         function createPlane(angle, x, y) {
             if (angle === void 0) { angle = Math.PI; }
             var shape = new p2.Plane();
@@ -264,7 +269,6 @@ var Main = (function (_super) {
             world.step(dt / 1000);
             var stageHeight = egret.MainContext.instance.stage.stageHeight;
             var l = world.bodies.length;
-            var allSleep = true;
             for (var i = 0; i < l; i++) {
                 var boxBody = world.bodies[i];
                 var box = boxBody.displays[0];
@@ -276,8 +280,6 @@ var Main = (function (_super) {
                     if (boxBody.sleepState == p2.Body.SLEEPING && boxBody.rolling) {
                         // box.alpha = 0.5;
                         boxBody.rolling = false;
-                        self.currentFruit = self.createFruit(self.stage.width / 24);
-                        self.stage.addChild(self.currentFruit);
                     }
                 }
             }

@@ -136,6 +136,10 @@ class Main extends egret.DisplayObjectContainer {
                 (boxBody as any).rolling = true;
             }
             addOneBox(e)
+            setTimeout(() => {
+                self.currentFruit = self.createFruit(self.stage.width / 24);
+                self.stage.addChild(self.currentFruit)
+            }, 300);
         }, this)
     }
 
@@ -206,7 +210,7 @@ class Main extends egret.DisplayObjectContainer {
         //创建world
         var world: p2.World = new p2.World();
         world.sleepMode = p2.World.BODY_SLEEPING;
-
+        world.gravity = [0, -50]
         function createPlane(angle:number=Math.PI,x:number,y:number):p2.Body
         {
             var shape = new p2.Plane();
@@ -234,7 +238,6 @@ class Main extends egret.DisplayObjectContainer {
 
             var stageHeight: number = egret.MainContext.instance.stage.stageHeight;
             var l = world.bodies.length;
-            let allSleep =  true;
             for (var i: number = 0; i < l; i++) {
                 var boxBody: p2.Body = world.bodies[i];
                 var box: egret.DisplayObject = boxBody.displays[0];
@@ -246,8 +249,7 @@ class Main extends egret.DisplayObjectContainer {
                     if (boxBody.sleepState == p2.Body.SLEEPING && (boxBody as any).rolling) {
                         // box.alpha = 0.5;
                         (boxBody as any).rolling = false;
-                        self.currentFruit = self.createFruit(self.stage.width / 24);
-                        self.stage.addChild(self.currentFruit)
+                       
                     }
           
                 }
