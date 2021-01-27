@@ -147,20 +147,20 @@ var Main = (function (_super) {
         this.addChild(fruitBox);
         fruitBox.show();
         // let fruit = this.addFruitTop()
-        var currentFruit = this.createFruit(factor);
-        this.stage.addChild(currentFruit);
+        this.currentFruit = this.createFruit(factor);
+        this.stage.addChild(this.currentFruit);
         var world = this.createPhysics(factor);
         fruitBox.addEventListener('touchEnd', function (e) {
-            if (!currentFruit) {
+            var self = _this;
+            if (!self.currentFruit) {
                 return;
             }
             //鼠标点击添加刚体
-            var self = _this;
             var _a = _this.stage, stageWidth = _a.stageWidth, stageHeight = _a.stageHeight;
             function addOneBox(e) {
                 var positionX = Math.floor(Math.min(e.stageX, stageWidth - 40) / factor);
                 var positionY = Math.floor((self.stage.stageHeight - 160) / factor);
-                var boxShape = new p2.Circle({ radius: currentFruit.v });
+                var boxShape = new p2.Circle({ radius: self.currentFruit.v });
                 var boxBody = new p2.Body({ mass: 1, position: [positionX, positionY] });
                 boxBody.addShape(boxShape);
                 world.addBody(boxBody);
@@ -172,20 +172,13 @@ var Main = (function (_super) {
                     return shape;
                 }
                 var display = createBall(boxShape.radius * factor);
-                // console.log(display.width, display.height, display.v)
-                // display.width = (<p2.Circle>boxShape).radius * 2 * factor;
-                // display.height = (<p2.Circle>boxShape).radius * 2 * factor;
-                // display = createBox((<p2.Box>boxShape).width * factor,(<p2.Box>boxShape).height * factor);
-                // display.width = (<p2.Box>boxShape).width * factor;
-                // display.height = (<p2.Box>boxShape).height * factor;
-                // boxBody.position[1] = positionY - display.height  / factor;
                 display.anchorOffsetX = display.width / 2;
                 display.anchorOffsetY = display.height / 2;
                 self.stage.addChild(display);
-                self.stage.removeChild(currentFruit);
-                currentFruit = self.createFruit(factor);
-                self.stage.addChild(currentFruit);
+                self.stage.removeChild(self.currentFruit);
+                self.currentFruit = null;
                 boxBody.displays = [display];
+                boxBody.rolling = true;
             }
             addOneBox(e);
         }, this);
@@ -260,6 +253,7 @@ var Main = (function (_super) {
         createPlane(0, 0, 0);
         createPlane(-Math.PI / 2, 0, 0); //最左边
         createPlane(Math.PI / 2, this.stage.stageWidth / factor, 0); //最左边
+        var self = this;
         egret.Ticker.getInstance().register(function (dt) {
             if (dt < 10) {
                 return;
@@ -270,6 +264,7 @@ var Main = (function (_super) {
             world.step(dt / 1000);
             var stageHeight = egret.MainContext.instance.stage.stageHeight;
             var l = world.bodies.length;
+            var allSleep = true;
             for (var i = 0; i < l; i++) {
                 var boxBody = world.bodies[i];
                 var box = boxBody.displays[0];
@@ -278,36 +273,16 @@ var Main = (function (_super) {
                     box.y = (stageHeight - 85) - boxBody.position[1] * factor;
                     // box.y = boxBody.position[1] * factor
                     box.rotation = 360 - (boxBody.angle + boxBody.shapes[0].angle) * 180 / Math.PI;
-                    // if (boxBody.sleepState == p2.Body.SLEEPING) {
-                    //     box.alpha = 0.5;
-                    // }
-                    // else {
-                    //     box.alpha = 1;
-                    // }
+                    if (boxBody.sleepState == p2.Body.SLEEPING && boxBody.rolling) {
+                        // box.alpha = 0.5;
+                        boxBody.rolling = false;
+                        self.currentFruit = self.createFruit(self.stage.width / 24);
+                        self.stage.addChild(self.currentFruit);
+                    }
                 }
             }
         }, this);
         return world;
-    };
-    Main.prototype.update = function () {
-        var world = this.world;
-        world.step(2.5);
-        var l = world.bodies.length;
-        for (var i = 0; i < l; i++) {
-            var boxBody = world.bodies[i];
-            var box = boxBody.displays[0];
-            if (box) {
-                box.x = boxBody.position[0];
-                box.y = boxBody.position[1];
-                box.rotation = 360 - (boxBody.angle + boxBody.shapes[0].angle) * 180 / Math.PI;
-                if (boxBody.sleepState == p2.Body.SLEEPING) {
-                    box.alpha = 0.5;
-                }
-                else {
-                    box.alpha = 1;
-                }
-            }
-        }
     };
     Main.prototype.createBackground = function () {
         var stageW = this.stage.stageWidth;
